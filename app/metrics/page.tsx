@@ -1,0 +1,18 @@
+'use client';
+import {useMemo,useState} from "react";import {metricsCatalog} from "@/lib/content/metricsCatalog";
+const rolePacks:any={
+"Scrum Master":["Velocity","Throughput","Cycle Time","Work in Progress","WIP Age","Blocker Age","Carry-over %","Sprint Goal Success","Predictability","Defect Trend"],
+"Delivery Manager":["Throughput","Cycle Time","Predictability","Dependency Health","Dependency On-time %","Milestone Forecast Variance","Risk Exposure","Decision Cycle Time","Shared Capacity Coverage"],
+"Project Manager":["Milestone On-time %","Milestone Forecast Variance","Schedule Variance","SPI","CPI","Risk Exposure","Issue Resolution Time","Dependency On-time %","Budget Variance","EAC","Benefit Realisation %"],
+"Program Manager":["Programme Milestone On-time %","Cross-project Dependency Health","Programme Risk Exposure","Programme Decision Cycle Time","Shared Capacity Coverage","Programme Benefit Realisation"],
+"Portfolio Manager":["Strategic Alignment Score","Investment by Strategic Theme","Portfolio WIP","Portfolio Throughput","Portfolio Capacity Coverage","Benefits Pipeline","Risk Concentration","Investment Health"]};
+export default function Metrics(){
+ const [role,setRole]=useState("All"),[family,setFamily]=useState("All"),[q,setQ]=useState(""),[open,setOpen]=useState<any>(null);
+ const families=["All",...Array.from(new Set(metricsCatalog.map((x:any)=>x.family)))];
+ const shown=useMemo(()=>metricsCatalog.filter((m:any)=>(role==="All"||rolePacks[role]?.includes(m.name))&&(family==="All"||m.family===family)&&(!q||`${m.name} ${m.meaning}`.toLowerCase().includes(q.toLowerCase()))),[role,family,q]);
+ return <main style={{maxWidth:1280,margin:"0 auto",padding:32}}>
+ <section style={{padding:32,borderRadius:22,background:"linear-gradient(135deg,#101828,#312e81)",color:"white"}}><small>DELIVERIQ METRICS INTELLIGENCE</small><h1 style={{fontSize:42,margin:"8px 0"}}>Measure → Understand → Act</h1><p>{metricsCatalog.length}+ delivery metrics with formulas, leading/lagging classification, role packs and AI-ready interpretation.</p></section>
+ <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:10,margin:"18px 0"}}><select value={role} onChange={e=>setRole(e.target.value)}><option>All</option>{Object.keys(rolePacks).map(x=><option key={x}>{x}</option>)}</select><select value={family} onChange={e=>setFamily(e.target.value)}>{families.map(x=><option key={x}>{x}</option>)}</select><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search metrics..."/></div>
+ <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(275px,1fr))",gap:12}}>{shown.map((m:any)=><article key={m.name} onClick={()=>setOpen(m)} style={{border:"1px solid #e4e7ec",borderRadius:14,padding:18,cursor:"pointer",background:"white"}}><small>{m.family} · {m.indicator}</small><h2>{m.name}</h2><p>{m.meaning}</p><b>Open metric guide →</b></article>)}</div>
+ {open&&<div onClick={()=>setOpen(null)} style={{position:"fixed",inset:0,background:"#10182899",display:"grid",placeItems:"center",padding:20,zIndex:99}}><article onClick={e=>e.stopPropagation()} style={{maxWidth:760,width:"100%",background:"white",padding:28,borderRadius:18}}><small>{open.family} · {open.indicator}</small><h1>{open.name}</h1><h3>What it means</h3><p>{open.meaning}</p><h3>How to calculate</h3><p style={{background:"#f2f4f7",padding:12,borderRadius:10}}>{open.formula}</p><h3>Responsible use</h3><p>{open.caution}</p><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button>Calculate</button><button>View trend</button><button>Ask Agile Assistant</button><a href="/templates">Use template</a></div><button onClick={()=>setOpen(null)} style={{marginTop:18}}>Close</button></article></div>}</main>
+}

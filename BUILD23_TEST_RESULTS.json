@@ -1,0 +1,17 @@
+{
+  "all_new_checks_pass": true,
+  "checks": {
+    "app": true,
+    "supabase": true,
+    "lib": true,
+    "docs": true,
+    "app/metrics/page.tsx": true,
+    "app/guides/page.tsx": true,
+    "lib/content/metricsCatalog.ts": true,
+    "lib/content/practitionerGuides.ts": true,
+    "app/api/ai/metrics-analyst/route.ts": true
+  },
+  "metric_count": 60,
+  "guide_count": 145,
+  "total_files": 159
+}
