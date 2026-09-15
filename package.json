@@ -1,7 +1,7 @@
 {
   "name": "deliveriq",
   "private": true,
-  "version": "0.23.2",
+  "version": "0.30.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

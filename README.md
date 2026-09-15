@@ -188,3 +188,16 @@ Start with `FINAL_REVIEW_GUIDE.md`.
 - Vaibhav Sisinty AI podcast/video links in learning hub
 - AI Lab with runnable future-PM automation demos
 - Richer result-message UX planned for all AI actions
+
+## Build 28 additions
+- Intelligence Studio unifying ten specialist, monetizable AI workflows
+- ProofLayer AI linked as the flagship migration-assurance workspace
+- ScopeSentinel for evidence-backed scope leakage and change requests
+- DecisionReceipt and PromiseLedger connected to existing accountability capabilities
+- AIPolicyReceipt for human-reviewed AI-use and disclosure records
+- ExceptionMiner for pre-automation exception discovery
+- MetricWitness linked to the existing metrics workspace
+- ExitMemory for verified role-transition packs
+- TenderTrap for bid obligation and margin-risk review
+- PolicyDelta Studio for requirement-to-control action plans
+- Shared evidence-gap logic, review drafts, copy, print and device-local saved runs
