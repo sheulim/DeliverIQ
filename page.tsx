@@ -1,82 +1,18 @@
- 'use client';
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-
-type Step={id:string;title:string;learn:string;task:string;evidence:string;level:number;status:"Not started"|"In progress"|"Submitted"|"Reviewed";feedback?:string};
-const starter:Step[]=[
-{id:"1",title:"Define the outcome",learn:"Turn an idea into a measurable project outcome and success evidence.",task:"Write the project outcome, users/stakeholders and 3 success measures.",evidence:"Project brief / charter excerpt",level:1,status:"Not started"},
-{id:"2",title:"Plan the delivery",learn:"Sequence work into milestones while exposing assumptions and dependencies.",task:"Create a milestone plan and identify the top dependencies.",evidence:"Milestone plan or dependency map",level:1,status:"Not started"},
-{id:"3",title:"Govern risk and decisions",learn:"Use RAID and decision records to make delivery evidence auditable.",task:"Record the top risks, assumptions, issues and decisions.",evidence:"RAID / decision log",level:2,status:"Not started"},
-{id:"4",title:"Measure progress",learn:"Select metrics that answer whether delivery is on track and what needs attention.",task:"Choose 3–6 meaningful metrics and explain why each matters.",evidence:"DeliverIQ metrics dashboard or status report",level:2,status:"Not started"},
-{id:"5",title:"Review and improve",learn:"Use evidence and feedback to improve the next delivery cycle.",task:"Run a review, capture lessons and identify one improvement experiment.",evidence:"Retrospective / review pack",level:3,status:"Not started"}
-];
-
-export default function LearningLab(){
- const [project,setProject]=useState("Lead a real delivery project");
- const [goal,setGoal]=useState("Build practical project leadership capability through evidence.");
- const [level,setLevel]=useState("Intermediate");
- const [steps,setSteps]=useState<Step[]>(starter);
- const [selected,setSelected]=useState("1");
- const [evidence,setEvidence]=useState("");
- const [fileName,setFileName]=useState("");
- const [busy,setBusy]=useState(false);
- const [note,setNote]=useState("");
- useEffect(()=>{try{const x=localStorage.getItem("deliveriq-learning-lab");if(x){const p=JSON.parse(x);setProject(p.project||project);setGoal(p.goal||goal);setLevel(p.level||level);setSteps(p.steps||starter)}}catch{}},[]);
- useEffect(()=>{try{localStorage.setItem("deliveriq-learning-lab",JSON.stringify({project,goal,level,steps}))}catch{}},[project,goal,level,steps]);
- const current=steps.find(s=>s.id===selected)||steps[0];
- const done=steps.filter(s=>s.status==="Reviewed").length;
- const pct=Math.round(done/steps.length*100);
- const submit=async()=>{
-   if(!evidence.trim()&&!fileName){setNote("Add evidence or attach a file before requesting feedback.");return}
-   setBusy(true);setNote("");
-   try{
-    const r=await fetch("/api/ai/learning-feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project,goal,level,step:current,evidence,fileName})});
-    const d=await r.json();
-    const fb=d.feedback||`Evidence received. Review it against the task outcome, completeness and traceability before advancing.`;
-    setSteps(xs=>xs.map(s=>s.id===current.id?{...s,status:"Reviewed",feedback:fb}:s));
-    setEvidence("");setFileName("");setNote(d.adaptiveNext?`Adaptive next step: ${d.adaptiveNext}`:"Feedback saved. The next challenge can now be adapted.");
-   }catch{setSteps(xs=>xs.map(s=>s.id===current.id?{...s,status:"Submitted"}:s));setNote("Evidence saved for human review. AI feedback is temporarily unavailable.");}
-   setBusy(false);
- };
- return <main style={{maxWidth:1180,margin:"0 auto",padding:"36px 20px 80px"}}>
-  <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",flexWrap:"wrap"}}>
-   <div><div style={{fontSize:13,fontWeight:800,color:"#635bff",letterSpacing:1}}>DELIVERIQ PROJECT LEARNING LAB</div>
-   <h1 style={{fontSize:38,margin:"8px 0"}}>Learn by delivering. Prove it with evidence.</h1>
-   <p style={{maxWidth:780,color:"#475467"}}>A project-based learning path with an evidence feedback loop. DeliverIQ sequences learning and tasks, reviews submitted evidence and adapts the next challenge. Human judgement remains authoritative.</p></div>
-   <Link href="/templates">Open template library →</Link>
-  </div>
-  <section style={{background:"#fff",border:"1px solid #e4e7ec",borderRadius:16,padding:20,marginTop:22}}>
-   <h2 style={{marginTop:0}}>1. Define your real project</h2>
-   <div style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr",gap:12}}>
-    <label>Project<input value={project} onChange={e=>setProject(e.target.value)} style={inp}/></label>
-    <label>Learning outcome<input value={goal} onChange={e=>setGoal(e.target.value)} style={inp}/></label>
-    <label>Starting level<select value={level} onChange={e=>setLevel(e.target.value)} style={inp}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
-   </div>
-  </section>
-  <section style={{display:"grid",gridTemplateColumns:"340px 1fr",gap:18,marginTop:18}}>
-   <div style={card}><div style={{display:"flex",justifyContent:"space-between"}}><h2 style={{marginTop:0}}>2. Learning path</h2><b>{pct}%</b></div>
-    <div style={{height:8,background:"#eef2f6",borderRadius:99,overflow:"hidden",marginBottom:16}}><div style={{width:`${pct}%`,height:"100%",background:"#635bff"}}/></div>
-    {steps.map(s=><button key={s.id} onClick={()=>setSelected(s.id)} style={{width:"100%",textAlign:"left",padding:12,margin:"5px 0",borderRadius:10,border:selected===s.id?"2px solid #635bff":"1px solid #e4e7ec",background:"#fff",cursor:"pointer"}}><b>{s.id}. {s.title}</b><div style={{fontSize:12,color:"#667085",marginTop:4}}>Level {s.level} · {s.status}</div></button>)}
-   </div>
-   <div style={card}><h2 style={{marginTop:0}}>3. Apply → Submit Evidence → Improve</h2>
-    <div style={{padding:14,background:"#f8fafc",borderRadius:12}}><b>Learn</b><p>{current.learn}</p><b>Do</b><p>{current.task}</p><b>Evidence expected</b><p>{current.evidence}</p></div>
-    <label style={{display:"block",marginTop:16}}>Evidence notes / excerpt<textarea value={evidence} onChange={e=>setEvidence(e.target.value)} rows={6} placeholder="Paste the relevant evidence, rationale, result or link description…" style={{...inp,resize:"vertical"}}/></label>
-    <label style={{display:"block",marginTop:10}}>Attach evidence <input type="file" onChange={e=>setFileName(e.target.files?.[0]?.name||"")} style={{display:"block",marginTop:7}}/></label>
-    {fileName&&<div style={{fontSize:13,color:"#475467",marginTop:6}}>Attached: {fileName} (filename recorded in this MVP; do not upload sensitive data.)</div>}
-    <button onClick={submit} disabled={busy} style={{marginTop:16,padding:"11px 16px",border:0,borderRadius:10,background:"#101828",color:"#fff",fontWeight:700,cursor:"pointer"}}>{busy?"Reviewing…":"Submit evidence for feedback"}</button>
-    {current.feedback&&<div style={{marginTop:18,padding:16,border:"1px solid #d0d5dd",borderRadius:12}}><b>Evidence feedback</b><p style={{whiteSpace:"pre-wrap"}}>{current.feedback}</p></div>}
-    {note&&<p style={{color:"#475467"}}>{note}</p>}
-   </div>
-  </section>
-  <section style={{...card,marginTop:18}}><h2 style={{marginTop:0}}>4. Evidence portfolio</h2>
-   <p style={{color:"#667085"}}>Completion is based on reviewed evidence, not content views. This is a learning record—not an employee performance score.</p>
-   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10}}>
-    <Metric label="Path completion" value={`${pct}%`}/><Metric label="Evidence reviewed" value={`${done}/${steps.length}`}/><Metric label="Current level" value={level}/><Metric label="Next challenge" value={steps.find(s=>s.status!=="Reviewed")?.title||"Path complete"}/>
-   </div>
-   <div style={{marginTop:14}}><Link href="/metrics/dashboard">Build a consolidated metrics dashboard →</Link></div>
-  </section>
- </main>
+'use client';
+import Link from 'next/link';import {useMemo,useState} from "react";import {metricsCatalog} from "@/lib/content/metricsCatalog";
+const rolePacks:any={
+"Scrum Master":["Velocity","Throughput","Cycle Time","Work in Progress","WIP Age","Blocker Age","Carry-over %","Sprint Goal Success","Predictability","Defect Trend"],
+"Delivery Manager":["Throughput","Cycle Time","Predictability","Dependency Health","Dependency On-time %","Milestone Forecast Variance","Risk Exposure","Decision Cycle Time","Shared Capacity Coverage"],
+"Project Manager":["Milestone On-time %","Milestone Forecast Variance","Schedule Variance","SPI","CPI","Risk Exposure","Issue Resolution Time","Dependency On-time %","Budget Variance","EAC","Benefit Realisation %"],
+"Program Manager":["Programme Milestone On-time %","Cross-project Dependency Health","Programme Risk Exposure","Programme Decision Cycle Time","Shared Capacity Coverage","Programme Benefit Realisation"],
+"Portfolio Manager":["Strategic Alignment Score","Investment by Strategic Theme","Portfolio WIP","Portfolio Throughput","Portfolio Capacity Coverage","Benefits Pipeline","Risk Concentration","Investment Health"]};
+export default function Metrics(){
+ const [role,setRole]=useState("All"),[family,setFamily]=useState("All"),[q,setQ]=useState(""),[open,setOpen]=useState<any>(null);
+ const families=["All",...Array.from(new Set(metricsCatalog.map((x:any)=>x.family)))];
+ const shown=useMemo(()=>metricsCatalog.filter((m:any)=>(role==="All"||rolePacks[role]?.includes(m.name))&&(family==="All"||m.family===family)&&(!q||`${m.name} ${m.meaning}`.toLowerCase().includes(q.toLowerCase()))),[role,family,q]);
+ return <main style={{maxWidth:1280,margin:"0 auto",padding:32}}>
+ <section style={{padding:32,borderRadius:22,background:"linear-gradient(135deg,#101828,#312e81)",color:"white"}}><small>DELIVERIQ METRICS INTELLIGENCE</small><h1 style={{fontSize:42,margin:"8px 0"}}>Measure → Understand → Act</h1><p>{metricsCatalog.length}+ delivery metrics with formulas, leading/lagging classification, role packs and AI-ready interpretation.</p><Link href='/metrics/dashboard' style={{display:'inline-block',marginTop:12,padding:'10px 14px',background:'#fff',color:'#312e81',borderRadius:9,textDecoration:'none',fontWeight:800}}>Create consolidated dashboard →</Link></section>
+ <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:10,margin:"18px 0"}}><select value={role} onChange={e=>setRole(e.target.value)}><option>All</option>{Object.keys(rolePacks).map(x=><option key={x}>{x}</option>)}</select><select value={family} onChange={e=>setFamily(e.target.value)}>{families.map(x=><option key={x}>{x}</option>)}</select><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search metrics..."/></div>
+ <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(275px,1fr))",gap:12}}>{shown.map((m:any)=><article key={m.name} onClick={()=>setOpen(m)} style={{border:"1px solid #e4e7ec",borderRadius:14,padding:18,cursor:"pointer",background:"white"}}><small>{m.family} · {m.indicator}</small><h2>{m.name}</h2><p>{m.meaning}</p><b>Open metric guide →</b></article>)}</div>
+ {open&&<div onClick={()=>setOpen(null)} style={{position:"fixed",inset:0,background:"#10182899",display:"grid",placeItems:"center",padding:20,zIndex:99}}><article onClick={e=>e.stopPropagation()} style={{maxWidth:760,width:"100%",background:"white",padding:28,borderRadius:18}}><small>{open.family} · {open.indicator}</small><h1>{open.name}</h1><h3>What it means</h3><p>{open.meaning}</p><h3>How to calculate</h3><p style={{background:"#f2f4f7",padding:12,borderRadius:10}}>{open.formula}</p><h3>Responsible use</h3><p>{open.caution}</p><div style={{display:"flex",gap:8,flexWrap:"wrap"}}><button>Calculate</button><button>View trend</button><button>Ask Agile Assistant</button><a href="/templates">Use template</a></div><button onClick={()=>setOpen(null)} style={{marginTop:18}}>Close</button></article></div>}</main>
 }
-const inp:any={width:"100%",boxSizing:"border-box",padding:"10px 11px",marginTop:6,border:"1px solid #d0d5dd",borderRadius:8,background:"#fff"};
-const card:any={background:"#fff",border:"1px solid #e4e7ec",borderRadius:16,padding:20};
-function Metric({label,value}:{label:string,value:string}){return <div style={{padding:14,border:"1px solid #e4e7ec",borderRadius:12}}><div style={{fontSize:12,color:"#667085"}}>{label}</div><div style={{fontSize:20,fontWeight:800,marginTop:5}}>{value}</div></div>}
