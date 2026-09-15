@@ -1,0 +1,18 @@
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+let client:OpenAI|null=null;
+function ai(){if(!process.env.OPENAI_API_KEY) return null; if(!client) client=new OpenAI({apiKey:process.env.OPENAI_API_KEY}); return client;}
+export async function POST(req:NextRequest){
+ try{
+  const body=await req.json();
+  const evidence=String(body.evidence||"").slice(0,12000);
+  const fileName=String(body.fileName||"").slice(0,240);
+  if(!evidence.trim()&&!fileName) return NextResponse.json({error:"Evidence is required."},{status:400});
+  const c=ai();
+  if(!c) return NextResponse.json({feedback:"Evidence received. AI review is unavailable; retain it for human review against the stated task and evidence criteria.",adaptiveNext:"Continue only after human review."});
+  const prompt=`You are DeliverIQ Learning Lab, an evidence-based project learning coach. Never claim competency from content viewing. Do not invent facts from a filename. Review only the evidence text supplied. Be concise and constructive. Return JSON with feedback and adaptiveNext. Project: ${body.project}\nGoal: ${body.goal}\nStarting level: ${body.level}\nTask: ${body.step?.task}\nExpected evidence: ${body.step?.evidence}\nAttached filename (not inspected): ${fileName}\nEvidence text:\n${evidence}`;
+  const r=await c.chat.completions.create({model:process.env.OPENAI_MODEL||"gpt-5-mini",messages:[{role:"user",content:prompt}],response_format:{type:"json_object"}});
+  const out=JSON.parse(r.choices[0]?.message?.content||"{}");
+  return NextResponse.json({feedback:String(out.feedback||"Evidence reviewed."),adaptiveNext:String(out.adaptiveNext||"")});
+ }catch(e:any){return NextResponse.json({error:"Learning feedback failed.",detail:process.env.NODE_ENV==="development"?e?.message:undefined},{status:500});}
+}

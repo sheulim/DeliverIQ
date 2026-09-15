@@ -1,0 +1,9 @@
+DeliverIQ Build 30 — Learning Lab Patch
+Upload the CONTENTS of this patch into the ROOT of the existing GitHub DeliverIQ repository on branch main.
+Preserve these exact paths:
+app/learning-lab/page.tsx
+app/api/ai/learning-feedback/route.ts
+components/Shell.tsx
+Replace components/Shell.tsx if prompted. Commit to main and let Vercel redeploy.
+Do not upload the ZIP itself as a repository file.
+Expected live route: /learning-lab

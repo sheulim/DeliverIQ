@@ -1,0 +1,82 @@
+ 'use client';
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+
+type Step={id:string;title:string;learn:string;task:string;evidence:string;level:number;status:"Not started"|"In progress"|"Submitted"|"Reviewed";feedback?:string};
+const starter:Step[]=[
+{id:"1",title:"Define the outcome",learn:"Turn an idea into a measurable project outcome and success evidence.",task:"Write the project outcome, users/stakeholders and 3 success measures.",evidence:"Project brief / charter excerpt",level:1,status:"Not started"},
+{id:"2",title:"Plan the delivery",learn:"Sequence work into milestones while exposing assumptions and dependencies.",task:"Create a milestone plan and identify the top dependencies.",evidence:"Milestone plan or dependency map",level:1,status:"Not started"},
+{id:"3",title:"Govern risk and decisions",learn:"Use RAID and decision records to make delivery evidence auditable.",task:"Record the top risks, assumptions, issues and decisions.",evidence:"RAID / decision log",level:2,status:"Not started"},
+{id:"4",title:"Measure progress",learn:"Select metrics that answer whether delivery is on track and what needs attention.",task:"Choose 3–6 meaningful metrics and explain why each matters.",evidence:"DeliverIQ metrics dashboard or status report",level:2,status:"Not started"},
+{id:"5",title:"Review and improve",learn:"Use evidence and feedback to improve the next delivery cycle.",task:"Run a review, capture lessons and identify one improvement experiment.",evidence:"Retrospective / review pack",level:3,status:"Not started"}
+];
+
+export default function LearningLab(){
+ const [project,setProject]=useState("Lead a real delivery project");
+ const [goal,setGoal]=useState("Build practical project leadership capability through evidence.");
+ const [level,setLevel]=useState("Intermediate");
+ const [steps,setSteps]=useState<Step[]>(starter);
+ const [selected,setSelected]=useState("1");
+ const [evidence,setEvidence]=useState("");
+ const [fileName,setFileName]=useState("");
+ const [busy,setBusy]=useState(false);
+ const [note,setNote]=useState("");
+ useEffect(()=>{try{const x=localStorage.getItem("deliveriq-learning-lab");if(x){const p=JSON.parse(x);setProject(p.project||project);setGoal(p.goal||goal);setLevel(p.level||level);setSteps(p.steps||starter)}}catch{}},[]);
+ useEffect(()=>{try{localStorage.setItem("deliveriq-learning-lab",JSON.stringify({project,goal,level,steps}))}catch{}},[project,goal,level,steps]);
+ const current=steps.find(s=>s.id===selected)||steps[0];
+ const done=steps.filter(s=>s.status==="Reviewed").length;
+ const pct=Math.round(done/steps.length*100);
+ const submit=async()=>{
+   if(!evidence.trim()&&!fileName){setNote("Add evidence or attach a file before requesting feedback.");return}
+   setBusy(true);setNote("");
+   try{
+    const r=await fetch("/api/ai/learning-feedback",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({project,goal,level,step:current,evidence,fileName})});
+    const d=await r.json();
+    const fb=d.feedback||`Evidence received. Review it against the task outcome, completeness and traceability before advancing.`;
+    setSteps(xs=>xs.map(s=>s.id===current.id?{...s,status:"Reviewed",feedback:fb}:s));
+    setEvidence("");setFileName("");setNote(d.adaptiveNext?`Adaptive next step: ${d.adaptiveNext}`:"Feedback saved. The next challenge can now be adapted.");
+   }catch{setSteps(xs=>xs.map(s=>s.id===current.id?{...s,status:"Submitted"}:s));setNote("Evidence saved for human review. AI feedback is temporarily unavailable.");}
+   setBusy(false);
+ };
+ return <main style={{maxWidth:1180,margin:"0 auto",padding:"36px 20px 80px"}}>
+  <div style={{display:"flex",justifyContent:"space-between",gap:16,alignItems:"center",flexWrap:"wrap"}}>
+   <div><div style={{fontSize:13,fontWeight:800,color:"#635bff",letterSpacing:1}}>DELIVERIQ PROJECT LEARNING LAB</div>
+   <h1 style={{fontSize:38,margin:"8px 0"}}>Learn by delivering. Prove it with evidence.</h1>
+   <p style={{maxWidth:780,color:"#475467"}}>A project-based learning path with an evidence feedback loop. DeliverIQ sequences learning and tasks, reviews submitted evidence and adapts the next challenge. Human judgement remains authoritative.</p></div>
+   <Link href="/templates">Open template library →</Link>
+  </div>
+  <section style={{background:"#fff",border:"1px solid #e4e7ec",borderRadius:16,padding:20,marginTop:22}}>
+   <h2 style={{marginTop:0}}>1. Define your real project</h2>
+   <div style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr",gap:12}}>
+    <label>Project<input value={project} onChange={e=>setProject(e.target.value)} style={inp}/></label>
+    <label>Learning outcome<input value={goal} onChange={e=>setGoal(e.target.value)} style={inp}/></label>
+    <label>Starting level<select value={level} onChange={e=>setLevel(e.target.value)} style={inp}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
+   </div>
+  </section>
+  <section style={{display:"grid",gridTemplateColumns:"340px 1fr",gap:18,marginTop:18}}>
+   <div style={card}><div style={{display:"flex",justifyContent:"space-between"}}><h2 style={{marginTop:0}}>2. Learning path</h2><b>{pct}%</b></div>
+    <div style={{height:8,background:"#eef2f6",borderRadius:99,overflow:"hidden",marginBottom:16}}><div style={{width:`${pct}%`,height:"100%",background:"#635bff"}}/></div>
+    {steps.map(s=><button key={s.id} onClick={()=>setSelected(s.id)} style={{width:"100%",textAlign:"left",padding:12,margin:"5px 0",borderRadius:10,border:selected===s.id?"2px solid #635bff":"1px solid #e4e7ec",background:"#fff",cursor:"pointer"}}><b>{s.id}. {s.title}</b><div style={{fontSize:12,color:"#667085",marginTop:4}}>Level {s.level} · {s.status}</div></button>)}
+   </div>
+   <div style={card}><h2 style={{marginTop:0}}>3. Apply → Submit Evidence → Improve</h2>
+    <div style={{padding:14,background:"#f8fafc",borderRadius:12}}><b>Learn</b><p>{current.learn}</p><b>Do</b><p>{current.task}</p><b>Evidence expected</b><p>{current.evidence}</p></div>
+    <label style={{display:"block",marginTop:16}}>Evidence notes / excerpt<textarea value={evidence} onChange={e=>setEvidence(e.target.value)} rows={6} placeholder="Paste the relevant evidence, rationale, result or link description…" style={{...inp,resize:"vertical"}}/></label>
+    <label style={{display:"block",marginTop:10}}>Attach evidence <input type="file" onChange={e=>setFileName(e.target.files?.[0]?.name||"")} style={{display:"block",marginTop:7}}/></label>
+    {fileName&&<div style={{fontSize:13,color:"#475467",marginTop:6}}>Attached: {fileName} (filename recorded in this MVP; do not upload sensitive data.)</div>}
+    <button onClick={submit} disabled={busy} style={{marginTop:16,padding:"11px 16px",border:0,borderRadius:10,background:"#101828",color:"#fff",fontWeight:700,cursor:"pointer"}}>{busy?"Reviewing…":"Submit evidence for feedback"}</button>
+    {current.feedback&&<div style={{marginTop:18,padding:16,border:"1px solid #d0d5dd",borderRadius:12}}><b>Evidence feedback</b><p style={{whiteSpace:"pre-wrap"}}>{current.feedback}</p></div>}
+    {note&&<p style={{color:"#475467"}}>{note}</p>}
+   </div>
+  </section>
+  <section style={{...card,marginTop:18}}><h2 style={{marginTop:0}}>4. Evidence portfolio</h2>
+   <p style={{color:"#667085"}}>Completion is based on reviewed evidence, not content views. This is a learning record—not an employee performance score.</p>
+   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10}}>
+    <Metric label="Path completion" value={`${pct}%`}/><Metric label="Evidence reviewed" value={`${done}/${steps.length}`}/><Metric label="Current level" value={level}/><Metric label="Next challenge" value={steps.find(s=>s.status!=="Reviewed")?.title||"Path complete"}/>
+   </div>
+   <div style={{marginTop:14}}><Link href="/metrics/dashboard">Build a consolidated metrics dashboard →</Link></div>
+  </section>
+ </main>
+}
+const inp:any={width:"100%",boxSizing:"border-box",padding:"10px 11px",marginTop:6,border:"1px solid #d0d5dd",borderRadius:8,background:"#fff"};
+const card:any={background:"#fff",border:"1px solid #e4e7ec",borderRadius:16,padding:20};
+function Metric({label,value}:{label:string,value:string}){return <div style={{padding:14,border:"1px solid #e4e7ec",borderRadius:12}}><div style={{fontSize:12,color:"#667085"}}>{label}</div><div style={{fontSize:20,fontWeight:800,marginTop:5}}>{value}</div></div>}
