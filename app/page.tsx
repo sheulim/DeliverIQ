@@ -13,7 +13,7 @@ export default function Home(){
    <div style={{display:"flex",justifyContent:"space-between",gap:20,alignItems:"center",flexWrap:"wrap"}}>
     <strong style={{fontSize:22}}>DeliverIQ</strong>
     <nav style={{display:"flex",gap:16,flexWrap:"wrap"}}>
-     <Link href="/playbooks">Playbooks</Link><Link href="/templates">Templates</Link><Link href="/learn">Learning</Link><Link href="/ai-future">AI Future</Link><Link href="/login">Sign in</Link>
+     <Link href="/playbooks">Playbooks</Link><Link href="/templates">Templates</Link><Link href="/learning-lab" style={{fontWeight:700}}>Learning Lab</Link><Link href="/learn">Learning</Link><Link href="/ai-future">AI Future</Link><Link href="/login">Sign in</Link>
     </nav>
    </div>
    <div style={{padding:"70px 0 40px"}}>
@@ -22,11 +22,27 @@ export default function Home(){
     <p style={{fontSize:21,maxWidth:760,color:"#475467"}}>An AI-powered command centre for Project Managers, Delivery Managers, Scrum Masters, Program Managers and Portfolio Managers.</p>
     <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:24}}>
      <Link href="/login" style={{padding:"13px 18px",background:"#635bff",color:"#fff",borderRadius:10,textDecoration:"none"}}>Create a project with AI</Link>
+     <Link href="/learning-lab" style={{padding:"13px 18px",background:"#fff",border:"1px solid #635bff",color:"#4f46e5",borderRadius:10,textDecoration:"none",fontWeight:700}}>Start Learning by Doing</Link>
      <Link href="/playbooks" style={{padding:"13px 18px",background:"#fff",border:"1px solid #d0d5dd",borderRadius:10,textDecoration:"none"}}>Explore playbooks</Link>
     </div>
    </div>
    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:14}}>
     {featureGroups.map(([t,d])=><article key={t} style={{background:"#fff",border:"1px solid #eaecf0",borderRadius:16,padding:20}}><h2>{t}</h2><p style={{color:"#667085"}}>{d}</p></article>)}
+   </div>
+  </section>
+
+  <section style={{padding:"58px 32px",background:"#111827",color:"#fff"}}>
+   <div style={{maxWidth:1200,margin:"0 auto",display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))",gap:28,alignItems:"center"}}>
+    <div>
+     <p style={{fontWeight:800,color:"#c4b5fd",letterSpacing:1}}>PROJECT LEARNING LAB</p>
+     <h2 style={{fontSize:38,margin:"8px 0 12px"}}>Learn by delivering a real project.</h2>
+     <p style={{fontSize:19,lineHeight:1.6,color:"#d1d5db"}}>Move beyond passive courses. Learn a delivery concept, apply it to a project, submit evidence, review the result and improve the next challenge.</p>
+     <Link href="/learning-lab" style={{display:"inline-block",marginTop:18,padding:"13px 18px",background:"#fff",color:"#111827",borderRadius:10,textDecoration:"none",fontWeight:800}}>Open Project Learning Lab →</Link>
+    </div>
+    <div style={{background:"#1f2937",border:"1px solid #374151",borderRadius:18,padding:24}}>
+     <div style={{fontWeight:800,fontSize:20,marginBottom:16}}>LEARN → PRACTICE → DELIVER → PROVE</div>
+     <p style={{color:"#d1d5db",lineHeight:1.6}}>Build practical evidence through project outcomes, milestone plans, RAID and decision logs, delivery metrics and retrospectives—with AI-assisted feedback and human review.</p>
+    </div>
    </div>
   </section>
 
@@ -53,7 +69,5 @@ export default function Home(){
   </div></section>
 
   <section style={{padding:"54px 32px"}}><div style={{maxWidth:1200,margin:"0 auto"}}><NewsletterSignup/></div></section>
-
-
  </main>
 }
